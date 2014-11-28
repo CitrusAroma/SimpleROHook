@@ -6,7 +6,8 @@
 #pragma once
 
 #include "targetver.h"
-
+#define INITGUID
+#define HOTDOG "ayy lmao"
 #define WIN32_LEAN_AND_MEAN             // Windows ヘッダーから使用されていない部分を除外します。
 // Windows ヘッダー ファイル:
 #include <windows.h>
@@ -33,7 +34,6 @@
 
 
 #include <vector>
-#include <array>
 #include <list>
 #include <map>
 
@@ -45,3 +45,5 @@
 #include <fstream>
 
 #include <cwchar>
+
+#include <cmath>

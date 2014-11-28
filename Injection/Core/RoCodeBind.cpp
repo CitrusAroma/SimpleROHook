@@ -853,12 +853,23 @@ void CRoCodeBind::RestoreRenderState(IDirect3DDevice7* d3ddevice)
 
 void CRoCodeBind::DrawOn3DMap(IDirect3DDevice7* d3ddevice)
 {
+	//DEBUG_LOGGING_NORMAL(("DrawOn3DMap"));
 	if (!g_pSharedData)return;
+	//DEBUG_LOGGING_NORMAL(("Shared data in.."));
 	if (!g_pmodeMgr)return;
 
+
 	if (g_pmodeMgr->m_curMode && g_pmodeMgr->m_curModeType == 1){
+		//DEBUG_LOGGING_NORMAL(("g_pmodeMgr->m_curMode = %08X->%08X\n",
+		//				g_pmodeMgr, g_pmodeMgr->m_curMode));
 		CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
+		//DEBUG_LOGGING_NORMAL(("pGameMode = %08X, pGameMode->map = %s, pGamemode->m_world = %08X, pGamemode->m_view  = %08X\n",
+		//				pGamemode, pGamemode->m_rswName, pGamemode->m_world, pGamemode->m_view));
+
+
 		if (!pGamemode->m_world || !pGamemode->m_view)return;
+		//DEBUG_LOGGING_NORMAL(("pGamemode->m_world->m_player= %08X\n",
+		//				pGamemode->m_world->m_player));
 		if (!pGamemode->m_world->m_player)return;
 
 		BackupRenderState(d3ddevice);
@@ -873,7 +884,6 @@ void CRoCodeBind::DrawOn3DMap(IDirect3DDevice7* d3ddevice)
 void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 {
 	if( g_pSharedData->m2e == FALSE )return;
-
 	CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
 	CWorld *pWorld = pGamemode->m_world;
 	CView *pView = pGamemode->m_view;
@@ -891,53 +901,90 @@ void CRoCodeBind::DrawM2E(IDirect3DDevice7* d3ddevice)
 	d3ddevice->SetRenderState(D3DRENDERSTATE_SRCBLEND ,D3DBLEND_SRCALPHA );
 	d3ddevice->SetRenderState(D3DRENDERSTATE_DESTBLEND,D3DBLEND_INVSRCALPHA);
 
-	if( pWorld && pView && pWorld->m_attr ){
+	if( pWorld && pView && pWorld->m_attr )
+	{
 		C3dAttr *pAttr = pWorld->m_attr;
 
-		int skillnums = pWorld->m_skillList.size();
-		std::list<CSkill*> skillList = pWorld->m_skillList;
-
-		for( std::list<CSkill*>::iterator it = skillList.begin() ; it != skillList.end() ; it++ )
+		DEBUG_LOGGING_DETAIL(("skillList.size= %d\n",
+						pWorld->m_skillList.size()));
+		if (!pWorld->m_skillList.empty())
 		{
-			CSkill *pSkill = *it;
+			//DEBUG_LOGGING_NORMAL(("skill jobid= %d\n",
+			//			*((&pWorld->m_skillList +8) +572)));
+			//auto skillList = pWorld->m_skillList;
 
-			if( pSkill && pSkill->m_job < 0x100 && m_M2ESkillColor[pSkill->m_job] ){
-				DWORD color = m_M2ESkillColor[pSkill->m_job];
-				CPOLVERTEX vertex[4] =
-				{
-					{   0.0,  0.0,   0.0f,  1.0f, color },
-					{ 100.0,  0.0,   0.0f,  1.0f, color },
-					{   0.0,100.0,   0.0f,  1.0f, color },
-					{ 100.0,100.0,   0.0f,  1.0f, color }
-				};
+#ifdef HOTDOG
+#pragma message("M2E does not work (yet) so we disable the code so you won't crash!")
+#else
+			for( auto it = skillList.begin(); it != skillList.end() ; it++ )
+			{
+				CSkill *pSkill = *it;
+				
+				if( pSkill && pSkill->m_job < 0x100 && m_M2ESkillColor[pSkill->m_job] ){
+					DWORD color = m_M2ESkillColor[pSkill->m_job];
+					CPOLVERTEX vertex[4] =
+					{
+						{   0.0,  0.0,   0.0f,  1.0f, color },
+						{ 100.0,  0.0,   0.0f,  1.0f, color },
+						{   0.0,100.0,   0.0f,  1.0f, color },
+						{ 100.0,100.0,   0.0f,  1.0f, color }
+					};
 
-				long cx,cy;
-				CAttrCell *pCell;
-				vector3d centerpos(pSkill->m_pos),polvect[4];
+					long cx,cy;
+					CAttrCell *pCell;
+					vector3d centerpos(pSkill->m_pos),polvect[4];
 
-				pAttr->ConvertToCellCoor(centerpos.x,centerpos.z,cx,cy);
-				pCell = pAttr->GetCell(cx, cy);
+					pAttr->ConvertToCellCoor(centerpos.x,centerpos.z,cx,cy);
+					pCell = pAttr->GetCell(cx, cy);
 
-				polvect[0].Set(centerpos.x -2.4f, pCell->h1 ,centerpos.z -2.4f);
-				polvect[1].Set(centerpos.x +2.4f, pCell->h2 ,centerpos.z -2.4f);
-				polvect[2].Set(centerpos.x -2.4f, pCell->h3 ,centerpos.z +2.4f);
-				polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
+					polvect[0].Set(centerpos.x -2.4f, pCell->h1 ,centerpos.z -2.4f);
+					polvect[1].Set(centerpos.x +2.4f, pCell->h2 ,centerpos.z -2.4f);
+					polvect[2].Set(centerpos.x -2.4f, pCell->h3 ,centerpos.z +2.4f);
+					polvect[3].Set(centerpos.x +2.4f, pCell->h4 ,centerpos.z +2.4f);
 
-				for(int ii = 0; ii < 4; ii ++){
-					tlvertex3d tlv3d;
-					ProjectVertex( polvect[ii] , pView->m_viewMatrix,&tlv3d );
+					for(int ii = 0; ii < 4; ii ++){
+						tlvertex3d tlv3d;
+						ProjectVertex( polvect[ii] , pView->m_viewMatrix,&tlv3d );
 
-					vertex[ii].x = tlv3d.x;
-					vertex[ii].y = tlv3d.y;
-					vertex[ii].z = tlv3d.z;
-					vertex[ii].rhw = tlv3d.oow;
+						vertex[ii].x = tlv3d.x;
+						vertex[ii].y = tlv3d.y;
+						vertex[ii].z = tlv3d.z;
+						vertex[ii].rhw = tlv3d.oow;
+					}
+					d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
 				}
-				d3ddevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, D3DFVF_CPOLVERTEX, vertex, 4, 0);
 			}
+#endif
 		}
+		
 	}
 }
+//copied straight from ea src funny enough !
+int distance_circle(int dx, int dy)
+{
+	double temp_dist = std::sqrt((double)(dx*dx + dy*dy));
 
+	//Bonus factor used by client
+	//This affects even horizontal/vertical lines so they are one cell longer than expected
+	temp_dist -= 0.0625;
+
+	if(temp_dist < 0) temp_dist = 0;
+
+	return ((int)temp_dist);
+}
+bool check_distance_circle(int dx, int dy, int distance)
+{
+	if(distance < 0) distance = 0;
+
+	return (distance_circle(dx,dy) == distance);
+}
+
+bool check_distance(int dx, int dy, int distance)
+{
+	if (dx < 0) dx = -dx;
+	if (dy < 0) dy = -dy;
+	return ((dx<dy?dy:dx) == distance);
+}
 void CRoCodeBind::DrawBBE(IDirect3DDevice7* d3ddevice)
 {
 	CGameMode *pGamemode = (CGameMode*)g_pmodeMgr->m_curMode;
@@ -1000,11 +1047,19 @@ void CRoCodeBind::DrawBBE(IDirect3DDevice7* d3ddevice)
 						}
 					}
 
-					if (chatscope){
-						if ((xx - cx) >= -9 && (xx - cx) <= +9 && ((yy - cy) == -9 || (yy - cy) == +9)
-							|| (yy - cy) >= -9 && (yy - cy) <= +9 && ((xx - cx) == -9 || (xx - cx) == +9)){
+					if(chatscope) {
+						if(check_distance_circle(xx-cx, yy-cy,9))
 							color = 0x0000ff00;
-						}
+					}
+
+					// looks like area_size on hotdog is 20, so..!
+					if(chatscope) {
+#ifndef HOTDOG
+						if( check_distance(xx-cx, yy-cy,14))
+#else
+						if (check_distance(xx-cx, yy-cy, 20))
+#endif
+							color = 0x00FFFF00;
 					}
 
 					if (color) {
@@ -1564,20 +1619,28 @@ void CRoCodeBind::SearchRagexeMemory(void)
 	CSearchCode strings_event_grf(0, "event.grf");
 	LPBYTE strings_event_grf_address = NULL;
 	CSearchCode addPak_event_grf(
-		"68*1******"         //  push    dword *"event.grf"
-		"b9*2******"         //  mov     ecx, dword CFileMgr::g_fileMgr
-		"e8*3******"         //  call    near CFileMgr::AddPak
+		"680C107700"
+		"B950468100"
+		"E835650100"
+		/*
+		"68**1*****"         //  push    dword *"event.grf"
+		"b950******"         //  mov     ecx, dword CFileMgr::g_fileMgr
+		"e835******"         //  call    near CFileMgr::AddPak
+		*/
 	);
 
 	CSearchCode strings_readfolder(0, "readfolder");
 	LPBYTE strings_readfolder_address = NULL;
 	CSearchCode set_g_readFolderFirst(
+		"68840e77008bcee82624020085c09090c6055c46810001"
+		/*
 		"68*1******"         //  push    dword *"readfolder"
 		"8bce"               //  mov     ecx, esi
 		"e8********"         //  call    near XMLElement::FindChild(char const *)
 		"85c0"               //  test    eax, eax
 		"7407"               //  jz      C005a43ce
 		"c605*2******01"     //  mov     byte[g_readFolderFirst], byte 001h // bool g_readFolderFirst
+		*/
 	);
 	PBOOL pg_readFolderFirst = NULL;
 
@@ -1602,7 +1665,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 	LPBYTE pRagexeBase;
 	MEMORY_BASIC_INFORMATION mbi,mbi_data;
-	DWORD temp_eax, temp_ecx, temp_edx, temp_esp;
+	//DWORD temp_eax, temp_ecx, temp_edx, temp_esp;
 
 	pRagexeBase = (LPBYTE)::GetModuleHandle(NULL);
 	pRagexeBase += 0x1000;
@@ -1625,23 +1688,73 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 		mbi.RegionSize += mbi_data.RegionSize;
 
-		// get s_CMouse instance
-		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
+		// get pCConnection_s_wsSend, pCConnection_s_wsRecv instance
+#ifndef HOTDOG
+		pCConnection_s_wsSend= (tWS2_32_send*)0x7A11A0;
+		pCConnection_s_wsRecv= (tWS2_32_recv*)0x7A1220;
+#else
+		pCConnection_s_wsSend= (tWS2_32_send*)0x00972150;
+		pCConnection_s_wsRecv= (tWS2_32_recv*)0x00972148;
+#endif
+		//g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.GetImmediateDWORD( &pBase[ii], '1' );
+		// snatch the packetLenMap
+		std::ifstream f("recvpackets.txt", std::ifstream::in);
+		if (f.is_open())
 		{
-			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
-
-			if (initCConnection_20140318iRagexe.PatternMatcher(&pBase[ii]))
+			while(f.good())
 			{
-				pCConnection_s_wsSend = (tWS2_32_send*)initCConnection_20140318iRagexe.GetImmediateDWORD(&pBase[ii], '1');
-				pCConnection_s_wsRecv = (tWS2_32_recv*)initCConnection_20140318iRagexe.GetImmediateDWORD(&pBase[ii], '2');
-				DEBUG_LOGGING_NORMAL(("Find s_wsSend,s_wsRecv baseaddress = %08X send = %08X | recv =%08X",
-					&pBase[ii], pCConnection_s_wsSend, pCConnection_s_wsRecv));
-
-				break;
+				int key=0, val=0;
+				f >> key; f >> val;
+				m_packetLenMap_table[key] = val;
 			}
 		}
 
-		// snatch the packetLenMap
+#ifndef HOTDOG
+		for( UINT ii = 0; ii < mbi.RegionSize - 1000 ; ii++ )
+		{
+			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
+
+			if( UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.PatternMatcher( &pBase[ii] ) )
+			{
+				DWORD GetPacketSizeAddr;
+				GetPacketSizeAddr = 
+					UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA.Get4BIndexDWORD( &pBase[ii] , '4' );
+				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
+					.GetImmediateDWORD( &pBase[ii], '1' );
+				
+				DEBUG_LOGGING_NORMAL( ("find g_pmodeMgr = %08X",g_pmodeMgr) );
+				break;
+				/*__asm push 0x0A9
+				__asm call GetPacketSizeAddr
+				__asm mov temp_esp,esp
+
+				p_std_map_packetlen *plen = (p_std_map_packetlen*)
+					*(DWORD*) (*(DWORD*)(temp_esp-19*4) + 4);
+
+				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
+					.GetImmediateDWORD( &pBase[ii], '1' );
+
+				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
+				DEBUG_LOGGING_NORMAL( (" esp = %08X",temp_esp) );
+				while(1)
+				{
+					if( plen->key > 0xffff || (plen->key == 0 && plen->value == 0) ){
+						packetLenMap = plen;
+						DEBUG_LOGGING_NORMAL( ("packetLenMap = %08X",packetLenMap) );
+						break;
+					}
+					plen = plen->parent;
+				}
+				break;*/
+			}
+		}
+#else
+		//DWORD temp_eax, temp_ecx, temp_edx, temp_esp;
+		g_pmodeMgr = (CModeMgr*)0x8E2958;
+			DEBUG_LOGGING_NORMAL( ("Default  g_pmodeMgr = %08X",g_pmodeMgr) );
+			/*
+				// snatch the packetLenMap
 		for( UINT ii = 0; ii < mbi.RegionSize - 1000 ; ii++ )
 		{
 			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
@@ -1660,7 +1773,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeA
 					.GetImmediateDWORD( &pBase[ii], '1' );
-
+				DEBUG_LOGGING_NORMAL( ("TypeA g_pmodeMgr = %08X",g_pmodeMgr) );
 				DEBUG_LOGGING_NORMAL( ("TypeA GetPacketSizeAddr %08X",GetPacketSizeAddr) );
 				DEBUG_LOGGING_NORMAL( (" esp = %08X",temp_esp) );
 				while(1)
@@ -1693,6 +1806,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeB
 					.GetImmediateDWORD( &pBase[ii], '1' );
+				DEBUG_LOGGING_NORMAL( ("TypeB g_pmodeMgr = %08X",g_pmodeMgr) );
 
 				DEBUG_LOGGING_NORMAL( ("TypeB GetPacketSizeAddr     = %08X eax = %08X ecx = %08X edx =%08X",
 					GetPacketSizeAddr,temp_eax,temp_ecx,temp_edx) );
@@ -1722,6 +1836,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeC
 					.GetImmediateDWORD( &pBase[ii], '1' );
+				DEBUG_LOGGING_NORMAL( ("TypeC g_pmodeMgr = %08X",g_pmodeMgr) );
 
 				DEBUG_LOGGING_NORMAL( ("TypeC GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
@@ -1750,6 +1865,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeD
 					.GetImmediateDWORD( &pBase[ii], '1' );
+				DEBUG_LOGGING_NORMAL( ("TypeD g_pmodeMgr = %08X",g_pmodeMgr) );
 
 				DEBUG_LOGGING_NORMAL( ("TypeD GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
@@ -1778,6 +1894,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeE
 					.GetImmediateDWORD( &pBase[ii], '1' );
+				DEBUG_LOGGING_NORMAL( ("TypeE g_pmodeMgr = %08X",g_pmodeMgr) );
 
 				DEBUG_LOGGING_NORMAL( ("TypeE GetPacketSizeAddr     = %08X ecx = %08X",GetPacketSizeAddr,temp_ecx) );
 				while(1)
@@ -1806,8 +1923,9 @@ void CRoCodeBind::SearchRagexeMemory(void)
 
 				g_pmodeMgr = (CModeMgr*)UIYourItemWnd__SendMsg_REQ_WEAR_EQUIP_Handler_TypeF
 					.GetImmediateDWORD(&pBase[ii], '1');
+				DEBUG_LOGGING_NORMAL( ("TypeF g_pmodeMgr = %08X",g_pmodeMgr) );
 
-				DEBUG_LOGGING_NORMAL(("TypeE GetPacketSizeAddr     = %08X ecx = %08X", GetPacketSizeAddr, temp_ecx));
+				DEBUG_LOGGING_NORMAL(("TypeF GetPacketSizeAddr     = %08X ecx = %08X", GetPacketSizeAddr, temp_ecx));
 				while (1)
 				{
 					if (plen->key > 0xffff || (plen->key == 0 && plen->value == 0)){
@@ -1821,6 +1939,33 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			}
 		}
 
+				// put packetlengthmap
+		if( packetLenMap ){
+			int packetnums = GetTreeData( packetLenMap->parent );
+			if( packetnums ){
+				std::stringstream onelinestr;
+				for(int ii = 0;ii < packetnums ;ii++){
+					if( (ii % 0x40)==0 ){
+						onelinestr << "# 0x" << std::setfill('0') << std::setw(4) << std::hex << ii;
+						DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
+						onelinestr.str("");
+					}
+					if( (ii % 0x10)==0 ){
+						onelinestr << " ";
+					}
+					onelinestr << std::setfill(' ') << std::setw(4) << std::dec << m_packetLenMap_table[ii] << ",";
+					if( (ii % 0x10)==0x0f ){
+						DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
+						onelinestr.str("");
+					}
+				}
+				DEBUG_LOGGING_NORMAL(( onelinestr.str().c_str() ));
+				DEBUG_LOGGING_NORMAL(( "" ));
+			}
+		}
+		*/
+#endif
+	
 		// get CMouse instance
 		for( UINT ii = 0; ii < mbi.RegionSize - CMouse_Init_vc6.GetSize() ; ii++ )
 		{
@@ -1856,6 +2001,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 		}
 
 		// get the address of PlayStream function 
+		/*
 		for( UINT ii = 0; ii < mbi.RegionSize - funcPlayStrem_based_HighPrest_exe.GetSize() ; ii++ )
 		{
 			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
@@ -1901,66 +2047,17 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				break;
 			}
 		}
-
-		// find strings
-		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
-		{
-			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
-
-			if ( !strings_event_grf_address && strings_event_grf.PatternMatcher(&pBase[ii]))
-			{
-				strings_event_grf_address = &pBase[ii];
-				DEBUG_LOGGING_NORMAL(("find 'event.grf' : %08X", strings_event_grf_address));
-			}
-			if (!strings_readfolder_address && strings_readfolder.PatternMatcher(&pBase[ii]))
-			{
-				strings_readfolder_address = &pBase[ii];
-				DEBUG_LOGGING_NORMAL(("find 'readfolderf' : %08X", strings_readfolder_address));
-			}
-		}
-
-		// get the address of CFileMgr::g_fileMgr
-		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
-		{
-			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
-
-			if (addPak_event_grf.PatternMatcher(&pBase[ii]) &&
-				addPak_event_grf.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)strings_event_grf_address)
-			{
-				m_CFileMgr__gfileMgr = (void*)addPak_event_grf.GetImmediateDWORD(&pBase[ii], '2');
-				DEBUG_LOGGING_NORMAL(("find CFileMgr::gfileMgr : %08X", m_CFileMgr__gfileMgr));
-				break;
-			}
-		}
-
-		// get the address of g_readFolderFirst
-		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
-		{
-			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
-
-			if (set_g_readFolderFirst.PatternMatcher(&pBase[ii]) &&
-				set_g_readFolderFirst.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)strings_readfolder_address)
-			{
-				pg_readFolderFirst = (PBOOL)set_g_readFolderFirst.GetImmediateDWORD(&pBase[ii], '2');
-				DEBUG_LOGGING_NORMAL(("find g_readFolderFirst : %08X", pg_readFolderFirst));
-				break;
-			}
-		}
-
-		// get the address of g_readFolderFirst
-		for (UINT ii = 0; ii < mbi.RegionSize - 1000; ii++)
-		{
-			LPBYTE pBase = (LPBYTE)mbi.BaseAddress;
-
-			if (subfunction_CFileMgr__Open.PatternMatcher(&pBase[ii]) &&
-				subfunction_CFileMgr__Open.GetImmediateDWORD(&pBase[ii], '1') == (DWORD)pg_readFolderFirst)
-			{
-				m_functionRagexe_CFileMgr__GetPak = (tCFileMgr__GetPak)subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '3');
-				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetFile : %08X", subfunction_CFileMgr__Open.GetNearJmpAddress(&pBase[ii], '2') ));
-				DEBUG_LOGGING_NORMAL(("find CFileMgr::GetPak : %08X", m_functionRagexe_CFileMgr__GetPak));
-				break;
-			}
-		}
+		*/
+		/*
+		m_funcRagexe_PlayStream = (tPlayStream)0x41BB20;
+		DWORD pPlayStream;
+		pPlayStream = (DWORD)m_funcRagexe_PlayStream;
+		DEBUG_LOGGING_NORMAL( ("void PlayStream(const char *streamFileName,int playflag) = %08X",pPlayStream) );
+		m_CFileMgr__gfileMgr = (void*)0x00814650;
+		pg_readFolderFirst = (PBOOL)0x81465C;
+		DEBUG_LOGGING_NORMAL(("find g_readFolderFirst : %08X", pg_readFolderFirst));
+		m_functionRagexe_CFileMgr__GetPak = (tCFileMgr__GetPak)0x005468A0;
+		DEBUG_LOGGING_NORMAL(("find CFileMgr::GetPak : %08X", m_functionRagexe_CFileMgr__GetPak));
 		{
 			void *address = NULL;
 			unsigned int size = 0;
@@ -1974,8 +2071,9 @@ void CRoCodeBind::SearchRagexeMemory(void)
 			DEBUG_LOGGING_NORMAL(("release data\\idnum2itemdisplaynametable.txt"));
 			ReleasePak(address);
 		}
-
+		*/
 		// put packetlengthmap
+		/*
 		if( packetLenMap ){
 			int packetnums = GetTreeData( packetLenMap->parent );
 			if( packetnums ){
@@ -1999,6 +2097,7 @@ void CRoCodeBind::SearchRagexeMemory(void)
 				DEBUG_LOGGING_NORMAL(( "" ));
 			}
 		}
+		*/
 
 	}
 }

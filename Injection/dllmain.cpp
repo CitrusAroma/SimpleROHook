@@ -237,6 +237,7 @@ BOOL IsRagnarokApp(void)
 	 || _tcsicmp( filename, _T("clragexe.exe") ) == 0
 	 || _tcsicmp( filename, _T("RagFree.exe") ) == 0
 	 || _tcsicmp( filename, _T("HighPriest.exe") ) == 0
+	 || _tcsicmp( filename, _T("ggro.exe") ) == 0
 		)
 	{
 		return TRUE;
