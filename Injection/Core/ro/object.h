@@ -34,6 +34,7 @@ public:
 	struct IDirect3DDevice7* m_device;
 	struct IDirectDrawSurface7* m_lpSurface;
 	void *m_lpUnknown;
+	void *m_lpUnknown2;
 	unsigned long m_dwScreenWidth;
 	unsigned long m_dwScreenHeight;
 //  .
@@ -568,6 +569,7 @@ public:
 #ifndef JRO_CLIENT_STRUCTURE
 	unsigned long m_gid;
 #endif
+	// this+572
 	int m_job;
 	int m_sex;
 	void* m_balloon;//class UIBalloonText* m_balloon;
@@ -596,6 +598,7 @@ public:
 	int m_is99;
 	char m_99;
 	int m_bodyState;
+	//this+680
 	int m_effectState;
 	int m_healthState;
 	int m_pkState;
@@ -629,23 +632,28 @@ public:
 	class CMsgEffect* m_chatProhibitEffect;
 	class CMsgEffect* m_cursorEffect;
 	std::list<CMsgEffect*> m_msgEffectList;
-//	int m_gactpad2[9];
-	int m_gactpad2[4];
+	int m_gactpad2[9];
+//	int m_gactpad2[4];
+	// ~793 bytes.. but the 4 msg2ais uncounted!
 	virtual ~CGameActor() {};
 };
 
 class CSkill : public CGameActor  {
 public:
-	long m_cskillpad;//
+	//long m_cskillpad;
 
 	unsigned long m_launchCnt;
 	unsigned long m_SkillStartTime;
+	// 884 CONFIRMED
 	unsigned long m_aid;
-//	class C3dActor* m_3dactor;
-//	class CRagEffect* m_LoopEffect;
+	// 888
+	class C3dActor* m_3dactor;
+	// 892
+	class CRagEffect* m_LoopEffect;
 	long m_framecounter; // ?? added for later HightPrieast.exe?
 	int m_effectId;
 
+	//sizeof (CSkill)  900 on highrpiest
 	virtual ~CSkill() {};
 };
 
@@ -714,6 +722,6 @@ public:
 	int m_preengageXOfMove;
 	int m_preengageYOfMove;
 	CRagEffect* m_statusEffect;
-
+	// sizeof(CPlayer) = 1232 for hotdog client (highpriest, 1108), 124 byte gap
 	virtual~CPlayer() {};
 };

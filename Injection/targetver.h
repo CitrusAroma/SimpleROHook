@@ -4,5 +4,6 @@
 
 // 以前の Windows プラットフォーム用にアプリケーションをビルドする場合は、WinSDKVer.h をインクルードし、
 // SDKDDKVer.h をインクルードする前に、サポート対象とするプラットフォームを示すように _WIN32_WINNT マクロを設定します。
-
+#define NTDDI_VERSION NTDDI_WINXP  
+#define _WIN32_WINNT _WIN32_WINNT_WINXP 
 #include <SDKDDKVer.h>

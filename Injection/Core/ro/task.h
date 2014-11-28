@@ -39,7 +39,11 @@ public:
 	int m_screenShotNow;
 	struct vector2d m_mouseSnapDiff; // Ç±Ç±Ç‹Ç≈àÍèè 0xd0 or 0xb4
 	//
+#ifndef HOTDOG
+	//char m_pad1[4];
+#else
 	char m_pad1[28];
+#endif
 	int m_cursorActNum; 
 	int m_cursorMotNum; 
 

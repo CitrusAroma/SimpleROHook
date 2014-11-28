@@ -93,7 +93,7 @@ struct vector3d {
 	};
 	float Magnitude()
 	{
-		return pow( x*x + y*y + z*z , 0.5f );
+		return std::pow( x*x + y*y + z*z , 0.5f );
 		//return sqrl( x*x + y*y + z*z );
 	};
 	float Angle(struct vector3d&) {};

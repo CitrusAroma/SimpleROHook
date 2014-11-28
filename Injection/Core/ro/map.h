@@ -285,13 +285,18 @@ public:
 class CWorld {
 public:
 	class CMode* m_curMode;
+	//this + 12 
 	std::list<CGameObject*> m_gameObjectList;
+	//this + 24
 	std::list<CGameActor*> m_actorList;
+	//this + 36
 	std::list<CItem*> m_itemList;
+	//this + 48 is confirmed. cskill size needs determined probably !!
 	std::list<CSkill*> m_skillList;
 	C3dGround* m_ground;
 	CPlayer* m_player;
 	C3dAttr* m_attr;
+
 	std::vector<C3dActor*> m_bgObjList;
 	long m_bgObjCount;
 	long m_bgObjThread;
